@@ -14,9 +14,19 @@ using Test
 
     # Overwriting non-Dict values with Dict
     dict = Dict("a" => Dict("b" => 5))
-    setpath!(dict, ["a", "b", "c"], 3)
-    @test dict["a"]["b"] isa Dict
-    @test dict["a"]["b"]["c"] == 3
+    setpath!(dict, ["a", "b"], 3)
+    @test dict["a"]["b"] == 3
+
+    # Test setting values to the same node with branching.
+    dict = Dict()
+    setpath!(dict, ["a", "b", "c", "d"], 3)
+    setpath!(dict, ["a", "b", "c2"], 2.5)
+
+    @test dict["a"]["b"]["c"]["d"] == 3
+    @test dict["a"]["b"]["c2"] == 2.5
+    setpath!(dict, ["a", "b", "c", "d"], 3.4)
+    # test promotion
+    @test dict["a"]["b"]["c"]["d"] == 3.4
 
     # Edge case: single key path
     dict = Dict()
