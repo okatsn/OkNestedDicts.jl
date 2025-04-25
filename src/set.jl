@@ -18,7 +18,7 @@ function setpath!(dict, keys, value)
     return dict
 end
 
-function setmetric!(dict, keys, value, description)
+function setmetric!(dict, keys, value, description="")
     # Create the metric Dict
     metric_dict = Dict("value" => value, "description" => description)
     # Add it at the specified path

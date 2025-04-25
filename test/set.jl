@@ -75,4 +75,10 @@ end
     dict = Dict()
     result = setmetric!(dict, ["a"], 1, "test")
     @test result === dict
+
+    # Test return value (default description)
+    dict = Dict()
+    result = setmetric!(dict, ["a"], 1)
+    @test result["a"]["description"] == ""
+    @test result["a"]["value"] == 1
 end
