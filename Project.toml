@@ -1,7 +1,7 @@
 name = "OkNestedDicts"
 uuid = "fa63e605-4ca0-440e-9899-f71f0f6b0a21"
 authors = ["okatsn <okatsn@gmail.com> and contributors"]
-version = "0.0.1"
+version = "0.1.0"
 
 [compat]
 julia = "1.10, 1.11"
