@@ -1,82 +1,94 @@
-# OkNestedDicts.jl
-
+# OkNestedDicts
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://okatsn.github.io/OkNestedDicts.jl.jl/stable/)
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://okatsn.github.io/OkNestedDicts.jl.jl/dev/)
 [![Build Status](https://github.com/okatsn/OkNestedDicts.jl.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/okatsn/OkNestedDicts.jl.jl/actions/workflows/CI.yml?query=branch%3Amain)
 [![Coverage](https://codecov.io/gh/okatsn/OkNestedDicts.jl.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/okatsn/OkNestedDicts.jl.jl)
 
-<!-- Don't have any of your custom contents above; they won't occur if there is no citation. -->
-
-## Documentation Badge is here:
-
 [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://okatsn.github.io/OkNestedDicts.jl.jl/stable)
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://okatsn.github.io/OkNestedDicts.jl.jl/dev)
 
-> See [Documenter.jl: Documentation Versions](https://documenter.juliadocs.org/dev/man/hosting/#Documentation-Versions)
 
-## Introduction
+A lightweight Julia package for easily manipulating nested dictionaries.
+
+## Installation
 
 This is a julia package created using `okatsn`'s preference, and this package is expected to be registered to [okatsn/OkRegistry](https://github.com/okatsn/OkRegistry) for CIs to work properly.
 
-!!! note Checklist
+```julia
+using Pkg
+Pkg.add("OkNestedDicts")
+```
 
-    - [ ] Create an empty repository (namely, `https://github.com/okatsn/OkNestedDicts.jl.jl.git`) on github, and push the local to origin. See [connecting to remote](#tips-for-connecting-to-remote).
-    - [ ] Add `ACCESS_OKREGISTRY` secret in the settings of this repository on Github, or delete both `register.yml` and `TagBot.yml` in `/.github/workflows/`. See [Auto-Registration](#auto-registration).
-    - [ ] To keep `Manifest.toml` being tracked, delete the lines in `.gitignore`.
-    - [ ] You might like to register `v0.0.0` in order to `pkg> dev OkNestedDicts.jl` in your environment.
+## Usage
 
+### Setting Values in Nested Dictionaries
 
-### Go to [OkPkgTemplates](https://github.com/okatsn/OkPkgTemplates.jl) for more information
+Setting values in deeply nested dictionaries normally requires creating each level of the structure first:
 
-- [How TagBot works and trouble shooting](https://github.com/okatsn/OkPkgTemplates.jl#tagbot)
-- [Use of Documenter](https://github.com/okatsn/OkPkgTemplates.jl#use-of-documenter)
+```julia
+# Traditional way (verbose)
+metadata = Dict()
+metadata["stats"] = Dict()
+metadata["stats"]["accuracy"] = Dict()
+metadata["stats"]["accuracy"]["value"] = 0.95
+metadata["stats"]["accuracy"]["description"] = "Model accuracy"
+```
 
-## References
+With `OkNestedDicts`, you can do this in a single line:
 
-### For a remote of different name
+```julia
+using OkNestedDicts
 
-Example workflow
+# Simple path setting
+metadata = Dict()
+setpath!(metadata, ["stats", "accuracy", "value"], 0.95)
 
-- Create `YourPackage.jl` with `OkPkgTemplates`
-- Create a new Repo on GitHub, saying `Hello-World`
-- Go to local path of YourPackage.jl, `git remote set-url origin https://<git-repo>/Hello-World.git`.
-- Use find all and Replace "YourPackage.jl" with "Hello-World" **EXCEPT** those **NOT** URL such as:
-  - `@testset "YourPackage.jl"` in `/test/runtest.jl`
-  - The `sitename` field in `/docs/make.jl`
+# Setting multiple paths
+dict = Dict()
+setpath!(dict, ["a", "b", "c"], 1)
+setpath!(dict, ["a", "b", "d"], 2)
+# Creates dict["a"]["b"]["c"] = 1 and dict["a"]["b"]["d"] = 2
+```
 
-### Auto-Registration
+### Setting Metrics
 
-- You have to add `ACCESS_OKREGISTRY` to the secret under the remote repo (e.g., https://github.com/okatsn/OkNestedDicts.jl.jl).
-- `ACCESS_OKREGISTRY` allows `CI.yml` to automatically register/update this package to [okatsn/OkRegistry](https://github.com/okatsn/OkRegistry).
+For metrics with values and descriptions, use the specialized `setmetric!` function:
 
-### Test
-#### How to add a new test
+```julia
+metadata = Dict()
 
-Add `.jl` files (that has `@testset` block or `@test` inside) in `test/`; `test/runtests.jl` will automatically `include` all the `.jl` scripts there.
+# Set metrics with value and description
+setmetric!(metadata, ["stats", "accuracy"], 0.95, "Model accuracy")
+setmetric!(metadata, ["stats", "f1_score"], 0.88, "F1 score on test set")
 
-#### Test docstring
+# Creates:
+# metadata["stats"]["accuracy"]["value"] = 0.95
+# metadata["stats"]["accuracy"]["description"] = "Model accuracy"
+# metadata["stats"]["f1_score"]["value"] = 0.88
+# metadata["stats"]["f1_score"]["description"] = "F1 score on test set"
+```
 
-`doctest` is executed at the following **two** places:
+## API Reference
 
-1. In `CI.yml`, `jobs: test: ` that runs `test/runtests.jl`
-2. In `CI.yml`, `jobs: docs: ` that runs directly on bash.
+### `setpath!(dict, keys, value) -> dict`
 
-It is no harm to run both, but you can manually delete either.
-Of course, `pkg> test` will also run `doctest` since it runs also `test/runtests.jl`.
+Sets a value in a nested dictionary at the path specified by `keys`.
 
-### Tips for connecting to remote
+- `dict`: The dictionary to modify
+- `keys`: An array of keys representing the path to the value
+- `value`: The value to set at the specified path
 
-Connect to remote:
+### `setmetric!(dict, keys, value, description="") -> dict`
 
-1. Switch to the local directory of this project (OkNestedDicts.jl)
-2. Add an empty repo OkNestedDicts.jl(.jl) on github (without anything!)
-3. `git push origin main`
+Sets a metric with value and description at the specified path.
 
-- It can be quite tricky, see https://discourse.julialang.org/t/upload-new-package-to-github/56783
-More reading
-Pkg's Artifact that manage an external dataset as a package
-- https://pkgdocs.julialang.org/v1/artifacts/
-- a provider for reposit data: https://github.com/sdobber/FA_data
+- `dict`: The dictionary to modify
+- `keys`: An array of keys representing the path to the metric
+- `value`: The metric value
+- `description`: Optional description of the metric (defaults to "")
 
+## License
+
+MIT
 
 This package is create on 2025-04-25.
