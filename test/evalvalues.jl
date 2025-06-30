@@ -1,5 +1,6 @@
 using Test
 using OkNestedDicts
+using Dates
 
 @testset "evalvalues tests" begin
 
@@ -226,5 +227,113 @@ using OkNestedDicts
         @test result["data"]["nested_array"] == [[1, 2], [3, 4]]
         @test result["metadata"]["count"] == 3
         @test result["metadata"]["name"] == "dataset"
+    end
+
+    @testset "DateTime and DatePeriod evaluation" begin
+        # Basic DateTime construction
+        @test evalvalues("DateTime(2022, 1, 1)") == DateTime(2022, 1, 1)
+        @test evalvalues("DateTime(2023, 12, 25, 14, 30, 0)") == DateTime(2023, 12, 25, 14, 30, 0)
+        @test evalvalues("Date(2022, 6, 15)") == Date(2022, 6, 15)
+        @test evalvalues("Time(10, 30, 45)") == Time(10, 30, 45)
+
+        # DateTime parsing from strings
+        @test evalvalues("DateTime(\"2022-01-01\")") == DateTime("2022-01-01")
+        @test evalvalues("Date(\"2022-06-15\")") == Date("2022-06-15")
+        @test evalvalues("Time(\"10:30:45\")") == Time("10:30:45")
+
+        # Period types
+        @test evalvalues("Month(1)") == Month(1)
+        @test evalvalues("Day(7)") == Day(7)
+        @test evalvalues("Hour(24)") == Hour(24)
+        @test evalvalues("Minute(60)") == Minute(60)
+        @test evalvalues("Second(3600)") == Second(3600)
+        @test evalvalues("Year(2022)") == Year(2022)
+        @test evalvalues("Week(4)") == Week(4)
+        @test evalvalues("Millisecond(1000)") == Millisecond(1000)
+
+        # CompoundPeriod
+        @test evalvalues("Month(2) + Day(15)") == Month(2) + Day(15)
+        @test evalvalues("Year(1) + Month(6) + Day(15)") == Year(1) + Month(6) + Day(15)
+        @test evalvalues("Hour(2) + Minute(30) + Second(45)") == Hour(2) + Minute(30) + Second(45)
+
+        # DateTime arithmetic
+        base_date = DateTime(2022, 1, 1)
+        @test evalvalues("DateTime(2022, 1, 1) + Month(1)") == base_date + Month(1)
+        @test evalvalues("DateTime(2022, 1, 1) + Day(30)") == base_date + Day(30)
+        @test evalvalues("DateTime(2022, 1, 1) + Hour(12)") == base_date + Hour(12)
+
+        # Dictionary with DateTime expressions
+        datetime_dict = Dict(
+            "start_date" => "DateTime(2022, 1, 1)",
+            "end_date" => "DateTime(2022, 12, 31)",
+            "duration" => "Month(6)",
+            "weekly_period" => "Week(2)",
+            "parsed_date" => "Date(\"2022-06-15\")"
+        )
+
+        result = evalvalues(datetime_dict)
+        @test result["start_date"] == DateTime(2022, 1, 1)
+        @test result["end_date"] == DateTime(2022, 12, 31)
+        @test result["duration"] == Month(6)
+        @test result["weekly_period"] == Week(2)
+        @test result["parsed_date"] == Date(2022, 6, 15)
+
+        # Nested dictionary with DateTime calculations
+        nested_datetime_dict = Dict(
+            "project" => Dict(
+                "start" => "DateTime(2022, 1, 1)",
+                "milestone1" => "DateTime(2022, 1, 1) + Month(3)",
+                "milestone2" => "DateTime(2022, 1, 1) + Month(6)",
+                "duration" => "Month(12)"
+            ),
+            "periods" => Dict(
+                "quarter" => "Month(3)",
+                "semester" => "Month(6)",
+                "year" => "Year(1)"
+            )
+        )
+
+        nested_result = evalvalues(nested_datetime_dict)
+        @test nested_result["project"]["start"] == DateTime(2022, 1, 1)
+        @test nested_result["project"]["milestone1"] == DateTime(2022, 4, 1)
+        @test nested_result["project"]["milestone2"] == DateTime(2022, 7, 1)
+        @test nested_result["project"]["duration"] == Month(12)
+        @test nested_result["periods"]["quarter"] == Month(3)
+        @test nested_result["periods"]["semester"] == Month(6)
+        @test nested_result["periods"]["year"] == Year(1)
+
+        # Date functions and operations
+        @test evalvalues("now()") isa DateTime
+        @test evalvalues("today()") isa Date
+        @test evalvalues("Dates.dayofweek(Date(2022, 1, 1))") == 6  # Saturday
+        @test evalvalues("Dates.month(Date(2022, 6, 15))") == 6
+        @test evalvalues("Dates.year(DateTime(2022, 1, 1))") == 2022
+
+        # Date ranges
+        @test evalvalues("Date(2022, 1, 1):Day(1):Date(2022, 1, 3)") == Date(2022, 1, 1):Day(1):Date(2022, 1, 3)
+        @test evalvalues("DateTime(2022, 1, 1, 0):Hour(6):DateTime(2022, 1, 1, 12)") == DateTime(2022, 1, 1, 0):Hour(6):DateTime(2022, 1, 1, 12)
+
+        # Complex DateTime expressions
+        @test evalvalues("DateTime(2022, 1, 1) + Month(6) + Day(15) + Hour(12)") == DateTime(2022, 7, 16, 12)
+        @test evalvalues("Date(2022, 12, 31) - Month(11)") == Date(2022, 1, 31)
+
+        # TimeZone-aware operations (if TimeZones.jl is available, but let's test basic functionality)
+        @test evalvalues("DateTime(2022, 1, 1, 12, 0, 0)") == DateTime(2022, 1, 1, 12, 0, 0)
+
+        # Type checking for DateTime results
+        datetime_type_dict = Dict(
+            "datetime" => "DateTime(2022, 1, 1)",
+            "date" => "Date(2022, 1, 1)",
+            "time" => "Time(12, 30)",
+            "period" => "Month(1)",
+            "compound" => "Month(1) + Day(15)"
+        )
+
+        type_result = evalvalues(datetime_type_dict)
+        @test isa(type_result["datetime"], DateTime)
+        @test isa(type_result["date"], Date)
+        @test isa(type_result["time"], Time)
+        @test isa(type_result["period"], Month)
+        @test isa(type_result["compound"], CompoundPeriod)
     end
 end
