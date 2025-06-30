@@ -230,6 +230,7 @@ using Dates
     end
 
     @testset "DateTime and DatePeriod evaluation" begin
+        using Dates
         # Basic DateTime construction
         @test evalvalues("DateTime(2022, 1, 1)") == DateTime(2022, 1, 1)
         @test evalvalues("DateTime(2023, 12, 25, 14, 30, 0)") == DateTime(2023, 12, 25, 14, 30, 0)
@@ -334,6 +335,6 @@ using Dates
         @test isa(type_result["date"], Date)
         @test isa(type_result["time"], Time)
         @test isa(type_result["period"], Month)
-        @test isa(type_result["compound"], CompoundPeriod)
+        @test isa(type_result["compound"], Dates.CompoundPeriod)
     end
 end
