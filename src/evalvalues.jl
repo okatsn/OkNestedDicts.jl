@@ -16,18 +16,20 @@ result = @evalvalues d
 """
 macro evalvalues(obj)
     return esc(quote
-        function _evalvalues_recursive(x::Dict)
-            Dict(k => _evalvalues_recursive(v) for (k, v) in x)
-        end
+        let
+            function _evalvalues_recursive(x::Dict)
+                Dict(k => _evalvalues_recursive(v) for (k, v) in x)
+            end
 
-        function _evalvalues_recursive(x::String)
-            eval(Meta.parse(x))
-        end
+            function _evalvalues_recursive(x::String)
+                eval(Meta.parse(x))
+            end
 
-        function _evalvalues_recursive(x)
-            x  # fallback for any other type
-        end
+            function _evalvalues_recursive(x)
+                x  # fallback for any other type
+            end
 
-        _evalvalues_recursive($obj)
+            _evalvalues_recursive($obj)
+        end
     end)
 end
