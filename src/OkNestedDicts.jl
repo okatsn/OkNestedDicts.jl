@@ -8,5 +8,5 @@ include("dict2nt.jl")
 export dict2nt
 
 include("evalvalues.jl")
-export evalvalues
+export @evalvalues
 end
