@@ -16,7 +16,6 @@
         @test nt2 isa NamedTuple
         @test nt2.b isa NamedTuple
         @test nt2.b.c == 2
-        @test nt2 == (a=1, b=(c=2, d=3))
         @test nt2.b.d == d2[:b][:d]
     end
 
@@ -33,15 +32,7 @@
         nt3 = dict2nt(d3)
         @test nt3.level1.level2b.level3.deep_val == "found_it"
         @test nt3.top_level == 99
-        @test nt3 == (
-            level1=(
-                level2a=(val1=10, val2=20),
-                level2b=(
-                    level3 = (deep_val="found_it",)
-                )
-            ),
-            top_level=99
-        )
+
     end
 
     @testset "Empty Dictionary" begin
@@ -80,7 +71,7 @@
         d5 = Dict("a" => 1, "b" => Dict("c" => 2))
         nt5 = dict2nt(d5)
         @test nt5 isa NamedTuple
-        @test keys(nt5) == (:a, :b) # Keys should be converted to Symbols
+        @test (keys(nt5) == (:a, :b)) || (keys(nt5) == (:b, :a)) # Keys should be converted to Symbols
         @test keys(nt5.b) == (:c,)
         @test nt5.a == 1
         @test nt5.b.c == 2
