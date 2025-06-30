@@ -5,9 +5,11 @@
         d1 = Dict(:a => 1, :b => "hello", :c => 3.14)
         nt1 = dict2nt(d1)
         @test nt1 isa NamedTuple
-        @test nt1 == (a=1, b="hello", c=3.14)
-        @test nt1.a == 1
-        @test nt1.b == "hello"
+
+        for ((k1, v1), (k2, v2)) in zip(pairs(d1), pairs(nt1))
+            @test k1 == k2
+            @test v1 == v2
+        end
     end
 
     @testset "Nested Dictionary" begin
